@@ -17,7 +17,7 @@ def partition(arr,low,high):
 		
 			# increment index of smaller element 
 			i = i+1
-            arr[i],arr[j] = arr[j],arr[i] 
+			arr[i],arr[j] = arr[j],arr[i] 
 
 	arr[i+1],arr[high] = arr[high],arr[i+1] 
 	return ( i+1 ) 
@@ -44,6 +44,8 @@ def quickSort(arr,low,high):
 arr = [11,2,3,5,7,8,9,10] 
 n = len(arr) 
 quickSort(arr,0,n-1) 
-print(arr)
+print ("Sorted array is:") 
+for i in range(n): 
+	print ("%d" %arr[i]), 
 
-
+# This code is contributed by Mohit Kumra 
