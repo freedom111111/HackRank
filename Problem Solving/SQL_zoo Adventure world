@@ -1,0 +1,224 @@
+Easy:
+1.
+select firstname from Customer
+where companyname='Bike World'
+
+2. 
+select c.companyname
+from Customer c, CustomerAddress ca, Address a     
+where c.customerid= ca.customerid
+and ca.addressid = a.addressid
+and a.city=‘Dallas'
+
+3.
+select count(sod.SalesOrderID)
+from Product p, SalesOrderDetail sod
+where p.productid = sod.productid
+and p.ListPrice>1000
+
+4.
+select distinct c.companyname
+from Customer c
+join SalesOrderHeader soh
+on c.customerid = soh.customerid
+where (soh.taxamt+soh.subtotal+soh.freight)>100000
+
+5.SUM(SalesOrderDetail.OrderQty) As Total
+from Product p
+join SalesOrderDetail sod
+on p.productid = sod.productid
+join SalesOrderHeader soh
+on sod.SalesOrderID = soh.SalesOrderID
+join Customer c
+on soh.customerid = c.customerid
+where p.Name='Racing Socks, L’ and c.companyname= ‘Riding Cycles’
+
+6.
+select salesorderid,unitprice
+from SalesOrderDetail
+where orderqty=1
+
+7. 
+select p.name, c.companyname
+from ProductModel pm
+join Product p
+on pm.productmodelid = p.productmodelid
+join SalesOrderDetail sod
+on p.productid = sod.productid
+join SalesOrderHeader soh
+on sod.salesorderid = soh.salesorderid
+join Customer c
+on soh.customerid = c.customerid
+where pm.name='Racing Socks’
+
+8.
+select pd.description
+from ProductDescription pd
+join ProductModelProductDescription pmpd
+on pd.productdescriptionid = pmpd.productdescriptionid
+join ProductModel pm
+on pmpd.productmodelid = pm.productmodelid
+join Product p
+on pm.productmodelid = p.productmodelid
+where pmpd.culture='fr' and p.productid=736
+
+9.  
+select c.companyname,sum(p.weight*sod.orderqty) as totalweight, soh.subtotal as subtotal
+from Product p
+join SalesOrderDetail sod
+on p.productid = sod.productid
+join SalesOrderHeader soh
+on sod.salesorderid = soh.salesorderid
+join Customer c
+on soh.customerid = c.customerid
+group by soh.salesorderid,c.companyname,soh.subtotal
+order by subtotal desc
+
+10.
+select sum(sod.orderqty)
+from ProductCategory pc
+join Product p 
+on pc.productcategoryid = p.productcategoryid
+join SalesOrderDetail sod
+on p.productid = sod.productid
+join SalesOrderHeader soh
+on sod.salesorderid = soh.salesorderid
+join Address a
+on soh.shiptoaddressid = a.addressid
+where a.city='London' and pc.name='Cranksets'
+
+11.
+select c.companyname,
+max(case when ca.addresstype = 'Main Office' then a.addressline1 else ' ' end) as  'mainofficeaddress' ,
+max(case when ca.addresstype =  'Shipping' then a.addressline1 else ' ' end ) as 'shippingaddress'
+from Customer c
+join CustomerAddress ca
+on c.customerid = ca.customerid
+join Address a
+on ca.addressid = a.addressid
+where a.city ='Dallas'
+group by c.companyname
+
+12.
+select soh.salesorderid, soh.subtotal, sum(sod.orderqty*p.listprice),sum(sod.orderqty*sod.unitprice)
+from Product p
+join SalesOrderDetail sod
+on p.productid= sod.productid
+join SalesOrderHeader soh
+on sod.salesorderid = soh.salesorderid
+group by soh.salesorderid,soh.subtotal
+
+13.
+select p.name, max(sod.unitprice*sod.orderqty) as totalvalue
+from Product p 
+join SalesOrderDetail sod
+on p.productid = sod.productid
+group by p.name
+order by totalvalue desc
+
+14.
+select t.range, count(t.total) as 'Num Orders',sum(t.total) as 'Total Value'
+from 
+(select case when orderqty*unitprice between 0 and 99 then '0-99'
+             when orderqty*unitprice between 100 and 999 then '100-999'
+             when orderqty*unitprice between 1000 and 9999 then '1000-9999'
+             when orderqty*unitprice>9999 then '10000-'
+             else 'Error'
+end as 'range', orderqty*unitprice as total ## 这里的引号非常重要
+from SalesOrderDetail) t
+group by t.range
+
+15.
+select 
+aa.City,
+pc.Name AS Product_Category_Name,
+ SUM(sod2.OrderQty * sod2.UnitPrice) AS Total_Sales
+from Address aa join
+(select city from 
+(select sum(soh.subtotal) as cityvalue,a.city
+from Address a
+JOIN SalesOrderHeader soh
+ON a.AddressID = soh.ShipToAddressID
+JOIN SalesOrderDetail sod
+ON soh.SalesOrderID = sod.SalesOrderID
+group by a.city
+order by cityvalue desc
+limit 3) t) t
+on aa.city = t.city
+JOIN SalesOrderHeader soh
+ON aa.AddressID = soh.ShipToAddressID
+JOIN SalesOrderDetail sod2
+ON soh.SalesOrderID = sod2.SalesOrderID
+JOIN Product p
+ON sod2.ProductID = p.ProductID
+JOIN ProductCategory pc
+ON p.ProductCategoryID = pc.ProductCategoryID
+group by aa.City,
+pc.Name;
+
+resit 
+1.
+select soh.salesorderid,c.companyname
+from Customer c
+left join SalesOrderHeader soh
+on c.customerid = soh.customerid
+where c.companyname like '%Good Toys%' or
+companyname like '%Bike World%'
+
+2.
+select p.name, sod.orderqty
+from Customer c
+join SalesOrderHeader soh
+on c.customerid = soh.customerid
+join SalesOrderDetail sod
+on soh.salesorderid = sod.salesorderid
+join Product p
+on p.productid = sod.productid
+where c.companyname like '%Futuristic Bikes%'
+
+3.
+select a.addressline1,a.addressline2,a.city,a.stateprovince,a.countyregion,a.postalcode,t.companyname,t.rank
+from 
+(select distinct c1.customerid, c1.companyname, 1 as 'rank'
+from Customer c1
+where lower(c1.companyname) like '%bike%'
+union
+select  distinct c2.customerid, c2.companyname, 2 as 'rank'
+from Customer c2
+where lower(c2.companyname) like '%cycle%') t
+join Customer c
+on c.customerid = t.customerid
+join CustomerAddress ca
+on ca.customerid = c.customerid
+join Address a
+on ca.addressid = ca.addressid
+order by t.rank, t.companyname
+
+4.
+select sum(soh.subtotal) as totalvalue,a.countyregion
+from Address a
+join SalesOrderHeader soh
+on a.addressid = soh.shiptoaddressid
+group by a.countyregion
+order by totalvalue desc
+
+5.
+select t.companyname,t.value,t.countyregion
+from (select c.companyname,sum(soh.subtotal) as value,a.countyregion
+from Address a
+join SalesOrderHeader soh
+on a.addressid = soh.shiptoaddressid
+join Customer c
+on c.customerid = soh.customerid
+group by c.companyname,a.countyregion) t,
+(select max(t1.value) as max,t1.countyregion from 
+(select c.companyname,sum(soh.subtotal) as value,a.countyregion
+from Address a
+join SalesOrderHeader soh
+on a.addressid = soh.shiptoaddressid
+join Customer c
+on c.customerid = soh.customerid
+group by c.companyname,a.countyregion) t1
+group by t1.countyregion) t2
+where t.value = t2.max
+
